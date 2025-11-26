@@ -1,46 +1,77 @@
-// index.js (Main Server - FINAL WORKING CODE)
+const officerDashboardRoutes = require('./routes/officer_dashboard');
+app.use('/api/officer-dashboard', officerDashboardRoutes);
+
+const officersRoutes = require('./routes/officers');
+app.use('/api/officers', officersRoutes);
+
+const loanLogsRoutes = require('./routes/loan_logs');
+app.use('/api/loan-logs', loanLogsRoutes);
+
+
+const aiAnalysisRoutes = require('./routes/ai_analysis');
+app.use('/api/ai-analysis', aiAnalysisRoutes);
+
+
+const assetsRoutes = require('./routes/assets');
+app.use('/api/assets', assetsRoutes);
+
+const agricultureLoanRoutes = require('./routes/agriculture_loan');
+app.use('/api/agriculture-loan', agricultureLoanRoutes);
+
+const goldLoanRoutes = require('./routes/gold_loan');
+app.use('/api/gold-loan', goldLoanRoutes);
+
+const educationLoanRoutes = require('./routes/education_loan');
+app.use('/api/education-loan', educationLoanRoutes);
+
+const vehicleLoanRoutes = require('./routes/vehicle_loan');
+app.use('/api/vehicle-loan', vehicleLoanRoutes);
+
+const homeLoanRoutes = require('./routes/home_loan');
+app.use('/api/home-loan', homeLoanRoutes);
+
+const personalLoanRoutes = require('./routes/personal_loan');
+app.use('/api/personal-loan', personalLoanRoutes);
+
+
 require('dotenv').config();
 const express = require('express');
-const { createClient } = require('@supabase/supabase-js');
-const app = express();
+const cors = require('cors');
+const supabase = require('./supabaseClient');
 
+// Routes (abhi sirf users + loans use karenge, baaki baad me step-by-step)
+const usersRoutes = require('./routes/users');
+const loansRoutes = require('./routes/loans');
+
+const app = express();
+const PORT = process.env.PORT || 4000;
+
+app.use(cors());
 app.use(express.json());
 
-// Supabase client (Uses keys from .env)
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+// Health Check Route
+app.get('/health', async (req, res) => {
+  try {
+    const { data, error } = await supabase.from('users').select('*').limit(1);
+    if (error) throw error;
 
-// Middleware & Routes Import
-const requireAuth = require('./middlewares/auth');
-
-// ✅ Routes Import (सभी सक्रिय हैं)
-const usersRouter = require('./routes/users')(supabase, requireAuth); 
-const officersRouter = require('./routes/officers')(supabase, requireAuth);
-const loansRouter = require('./routes/loans')(supabase, requireAuth);      
-const assetsRouter = require('./routes/assets')(supabase, requireAuth);   
-const aiRouter = require('./routes/ai_analysis')(supabase, requireAuth); 
-const logsRouter = require('./routes/loan_logs')(supabase, requireAuth); 
-
-
-// ✅ Mount Routes (सभी /api पर सक्रिय हैं)
-app.use('/api/users', usersRouter);
-app.use('/api/officers', officersRouter);
-app.use('/api/loans', loansRouter);
-app.use('/api/assets', assetsRouter);
-app.use('/api/ai', aiRouter);
-app.use('/api/logs', logsRouter);
-
-
-// ✅ Test route (Only root /)
-app.get('/', (req, res) => res.send('Backend is running and all APIs are mounted ✅'));
-
-// ❌ Error Handler (Cannot GET/404 handling)
-app.use((req, res, next) => {
-    if (req.originalUrl !== '/') {
-        res.status(404).json({ error: `Cannot ${req.method} ${req.originalUrl}. Route not found.` });
-        return;
-    }
-    next();
+    res.json({
+      status: 'ok',
+      db: 'connected',
+      sampleUser: data?.[0] || null,
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      error: err.message,
+    });
+  }
 });
 
-const port = process.env.PORT || 4000;
-app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
+// Mount Routes
+app.use('/api/users', usersRoutes);
+app.use('/api/loans', loansRoutes);
+
+app.listen(PORT, () => {
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+});

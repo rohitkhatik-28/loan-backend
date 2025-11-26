@@ -1,37 +1,110 @@
 // routes/users.js
 const express = require('express');
+const supabase = require('../supabaseClient');
+
 const router = express.Router();
 
-module.exports = (supabase, requireAuth) => {
-  // ✅ GET - all users
-  router.get('/', requireAuth, async (req, res) => {
-    const { data, error } = await supabase.from('users').select('*');
-    if (error) return res.status(400).json({ error: error.message });
+// ================================
+// 1) Get all users
+// GET /api/users
+// ================================
+router.get('/', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) return res.status(500).json({ message: error.message });
+
     res.json(data);
-  });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
-  // ✅ GET - single user
-  router.get('/:id', requireAuth, async (req, res) => {
-    const { data, error } = await supabase.from('users').select('*').eq('id', req.params.id).single();
-    if (error) return res.status(404).json({ error: error.message });
+// ================================
+// 2) Get user by ID
+// GET /api/users/:id
+// ================================
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) return res.status(404).json({ message: 'User not found' });
+
     res.json(data);
-  });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
-  // ✅ POST - create new user
-  router.post('/', requireAuth, async (req, res) => {
-    const payload = req.body;
-    const { data, error } = await supabase.from('users').insert([payload]).select();
-    if (error) return res.status(400).json({ error: error.message });
-    res.json({ message: 'User created successfully', data });
-  });
+// ================================
+// 3) Create User
+// POST /api/users
+// ================================
+router.post('/', async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      mobile,
+      aadhaar_num,
+      address,
+      city,
+      state,
+      pincode,
+      dob,
+      created_by,
+    } = req.body;
 
-  // ✅ PUT - update user
-  router.put('/:id', requireAuth, async (req, res) => {
-    const payload = req.body;
-    const { data, error } = await supabase.from('users').update(payload).eq('id', req.params.id).select();
-    if (error) return res.status(400).json({ error: error.message });
-    res.json({ message: 'User updated', data });
-  });
+    if (!name || !email) {
+      return res.status(400).json({ message: 'name and email are required' });
+    }
 
-  return router;
-};
+    const { data, error } = await supabase
+      .from('users')
+      .insert([
+        {
+          name,
+          email,
+          mobile,
+          aadhaar_num,
+          address,
+          city,
+          state,
+          pincode,
+          dob,
+          created_by: created_by || 'system',
+        },
+      ])
+      .select('*')
+      .single();
+
+    if (error) return res.status(500).json({ message: error.message });
+
+    res.status(201).json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ================================
+// 4) Update User
+// PUT /api/users/:id
+// ================================
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const updateFields = { ...req.body, updated_at: new Date() };
+
+    const { data, error } = await supabase
+      .from('users')
+      .update(update
