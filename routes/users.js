@@ -95,6 +95,7 @@ router.post('/', async (req, res) => {
   }
 });
 
+
 // ================================
 // 4) Update User
 // PUT /api/users/:id
@@ -103,8 +104,46 @@ router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
-    const updateFields = { ...req.body, updated_at: new Date() };
+    const updateFields = {
+      ...req.body,
+      updated_at: new Date(),
+    };
 
     const { data, error } = await supabase
       .from('users')
-      .update(update
+      .update(updateFields)   // ✅ FIXED
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) return res.status(500).json({ message: error.message });
+
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+
+// ================================
+// 5) Delete User
+// DELETE /api/users/:id
+// ================================
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { error } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', id);
+
+    if (error) return res.status(500).json({ message: error.message });
+
+    res.json({ message: 'User deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+module.exports = router;
