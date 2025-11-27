@@ -9,7 +9,16 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Import Routes AFTER app is created
+// ---------- HEALTH CHECK ROUTE (Top par rakhenge) ----------
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'Backend is running 🚀',
+    time: new Date()
+  });
+});
+
+// ---------- Import Routes ----------
 const usersRoutes = require('./routes/users');
 const loansRoutes = require('./routes/loans');
 const officerRoutes = require('./routes/officers');
@@ -25,7 +34,7 @@ const educationLoanRoutes = require('./routes/education_loan');
 const goldLoanRoutes = require('./routes/gold_loan');
 const agricultureLoanRoutes = require('./routes/agriculture_loan');
 
-// NOW use routes (AFTER imports & AFTER app initialization)
+// ---------- Use API Routes ----------
 app.use('/api/users', usersRoutes);
 app.use('/api/loans', loansRoutes);
 app.use('/api/officers', officerRoutes);
@@ -41,16 +50,16 @@ app.use('/api/education-loan', educationLoanRoutes);
 app.use('/api/gold-loan', goldLoanRoutes);
 app.use('/api/agriculture-loan', agricultureLoanRoutes);
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    db: 'connected'
+// ---------- Default Route for Not Found ----------
+app.use((req, res) => {
+  res.status(404).json({
+    status: 'error',
+    message: 'Route not found'
   });
 });
 
-// Start Server
+// ---------- Start Server ----------
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on port ${PORT}`);
 });
