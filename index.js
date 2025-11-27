@@ -2,14 +2,16 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
-// Create express app FIRST
+// Create express app
 const app = express();
 
 // Middlewares
 app.use(cors());
 app.use(express.json());
 
-// ---------- HEALTH CHECK ROUTE (Top par rakhenge) ----------
+// ------------------------------------------------------
+// HEALTH CHECK (Always define BEFORE all routes)
+// ------------------------------------------------------
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -18,7 +20,9 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ---------- Import Routes ----------
+// ------------------------------------------------------
+// IMPORT ROUTES
+// ------------------------------------------------------
 const usersRoutes = require('./routes/users');
 const loansRoutes = require('./routes/loans');
 const officerRoutes = require('./routes/officers');
@@ -34,7 +38,9 @@ const educationLoanRoutes = require('./routes/education_loan');
 const goldLoanRoutes = require('./routes/gold_loan');
 const agricultureLoanRoutes = require('./routes/agriculture_loan');
 
-// ---------- Use API Routes ----------
+// ------------------------------------------------------
+// USE ROUTES
+// ------------------------------------------------------
 app.use('/api/users', usersRoutes);
 app.use('/api/loans', loansRoutes);
 app.use('/api/officers', officerRoutes);
@@ -50,7 +56,9 @@ app.use('/api/education-loan', educationLoanRoutes);
 app.use('/api/gold-loan', goldLoanRoutes);
 app.use('/api/agriculture-loan', agricultureLoanRoutes);
 
-// ---------- Default Route for Not Found ----------
+// ------------------------------------------------------
+// 404 HANDLER
+// ------------------------------------------------------
 app.use((req, res) => {
   res.status(404).json({
     status: 'error',
@@ -58,7 +66,9 @@ app.use((req, res) => {
   });
 });
 
-// ---------- Start Server ----------
+// ------------------------------------------------------
+// START SERVER
+// ------------------------------------------------------
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
